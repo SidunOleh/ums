@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteRule ^[^\.]*$ index.php
+
+php_value display_errors on

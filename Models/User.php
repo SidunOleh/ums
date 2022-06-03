@@ -13,7 +13,7 @@ class User
      */
 	public static function getAll()
 	{
-		$result = DB::query("SELECT * FROM `users` ORDER BY `id` DESC");
+		$result = DB::query("SELECT * FROM `users` ORDER BY `id` ASC");
 
 		if (! $result) {
 			return false;
@@ -39,11 +39,11 @@ class User
 			return false;
 		}
 
-		if (! $user = $result->fetch_all(MYSQLI_ASSOC)) {
+		if (! $user = $result->fetch_assoc()) {
 			return [];
 		}
 
-		return $user[0];
+		return $user;
 	}
 
 	/**
@@ -74,10 +74,16 @@ class User
 	 * @param array $user user's data
 	 * @param int $id user's id
 	 * 
-     * @return bool
+     * @return bool|int
      */
 	public static function update($user, $id)
 	{
+		$exist = DB::query("SELECT `id` FROM `users` WHERE `id`='$id'");
+
+		if (! $exist->fetch_assoc()) {
+			return 0;
+		}
+
 		$result = DB::query("UPDATE `users` 
 			SET 
 				`first_name`='$user[first_name]', `last_name`='$user[last_name]',
@@ -85,7 +91,11 @@ class User
 			WHERE 
 				`id`='$id'");
 
-		return $result;
+		if (! $result) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

@@ -38,7 +38,7 @@ class UserController
 		}
 
 		if (count($user) == 0) {
-			return Request::makeError(100, 'Not fount user');
+			return Request::makeError(100, 'Not found user');
 		}
 
 		return Request::make(['user'=>$user]);
@@ -77,7 +77,7 @@ class UserController
      */
 	public function update($id)
 	{
-		$user = $_POST['user'] ?? [];
+		$user = $_POST['user'] ?? ['first_name'=>'Oleg','last_name'=>'Smith','role'=>'user','status'=>1];
 
 		$validator = Validator::get('user');
 
@@ -87,8 +87,15 @@ class UserController
 
 		$validated = $validator->validated();
 
-		if (! User::update($validated, $id)) {
+
+		$updated = User::update($validated, $id);
+		
+		if ($updated === false) {
 			return Request::makeError(500, 'Internal Server Error');
+		}
+
+		if ($updated === 0) {
+			return Request::makeError(100, 'Not found user');
 		}
 
 		return Request::make();
@@ -103,8 +110,14 @@ class UserController
      */
 	public function delete($id)
 	{
-		if (! User::delete($id)) {
+		$deleted = User::delete($id);
+		
+		if ($deleted === false) {
 			return Request::makeError(500, 'Internal Server Error');
+		}
+
+		if ($deleted === 0) {
+			return Request::makeError(100, 'Not found user');
 		}
 
 		return Request::make();

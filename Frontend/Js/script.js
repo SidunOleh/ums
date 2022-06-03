@@ -1,5 +1,17 @@
 $(document).ready(function () {
 
+	// modal windows
+	let confirm     = $('#confirm-modal');
+	let confirmBody = confirm.find('.modal-body');
+	
+	let warn        = $('#warn-modal');
+	let warnBody    = warn.find('.modal-body');
+	
+	let userModal   = $('#user-form-modal');
+	let userTitle   = userModal.find('.modal-title');
+	let userErrors  = userModal.find('.errors');
+	let userForm    = userModal.find('#user-form');
+
 	// confirmation
 	let confirmCallback;
 
@@ -10,30 +22,32 @@ $(document).ready(function () {
 			confirmCallback();
 		}
 
-		$('#confirm-modal').modal('hide');
+		confirm.modal('hide');
 	});
 
 	// delete user
 	$(document).on('click', '.bttn-delete', function (e) {
-		let user   = $(this).closest('tr');
-		let userId = user.attr('data-id');
+		let user     = $(this).closest('tr');
+		let userName = user.find('.user-name').text();
+		let userId   = user.attr('data-id');
 
-		$('#confirm-modal').modal('show');
+    confirmBody.text(`Are you sure to delete ${userName}?`);
+		confirm.modal('show');
 
 		confirmCallback = function () {
 			$.ajax(`/users/delete/${userId}`, {
-				type: 'GET',
+				type: 'POST',
 				success: function (data) {
 					data = JSON.parse(data);
 
-					if (data.status) {
-						user.remove();
-						emptyTable();
-					} else {
-						let modal = $('#warn-modal');
-						modal.find('.modal-body').text(data.error.message);
-						modal.modal('show');
+					if (! data.status) {
+						warnBody.text(data.error.message);
+						warn.modal('show');
+						return;
 					}
+
+					user.remove();
+					noUsers();
 				},
 			});
 		};
@@ -41,26 +55,23 @@ $(document).ready(function () {
 
 	// checkboxes
 	$(document).on('change', 'table input[type=checkbox]', function (e) {
+		let current = $(this);
 
-		if ($(this).attr('id') == 'all-items') {
-			$('table input[type=checkbox]').prop('checked', $(this).prop('checked'));
-			return;
+		if (current.attr('id') == 'all-items') {
+			$('table input[type=checkbox]').prop('checked', current.prop('checked'));
+		} else {
+			$('table input[type=checkbox]#all-items').prop('checked', false);
 		}
-
-		$('table input#all-items').prop('checked', false);
 	});
 
-	// select
+	// group requests
 	$('.bttn-select').bind('click', function (e) {
-		let modal     = $('#warn-modal');
-		let modalBody = modal.find('.modal-body');
+		let users    = $('tbody input[type=checkbox]:checked').closest('tr');
+		let usersIds = jQuery.map(users, (user) => $(user).attr('data-id'));
 
-		let users = $('tbody input[type=checkbox]:checked')
-			.closest('tr');
-
-		if (users.length == 0) {
-			modalBody.text('Choose users!');
-			modal.modal('show');
+		if (usersIds.length == 0) {
+			warnBody.text('Choose users !');
+			warn.modal('show');
 			return;
 		}
 
@@ -68,71 +79,76 @@ $(document).ready(function () {
 		let action = select.val();
 
 		if (action == null) {
-			modalBody.text('Choose action!');
-			modal.modal('show');
+			warnBody.text('Choose action !');
+			warn.modal('show');
 			return;
 		}
+		
+    let groupRequest = function () {
+    	$.ajax(`/users/${action}`, {
+    		type: 'POST',
+    		data: { users_ids: usersIds, },
+    		success: function (data) {
+    			data = JSON.parse(data);
+    
+    			if (! data.status) {
+    				warnBody.text(data.error.message);
+    				warn.modal('show');
+    				return;
+    			}
 
-		let usersIds = [];
-		users.each(function (i, el) {
-			usersIds[i] = $(el).attr('data-id');
-		});
+    			let status = users.find('.user-status');
+    
+  				switch (action) {
+  					case 'delete':
+  						users.remove();
+  						noUsers();
+  					break;
+  					case 'activate':
+  						status.removeClass('not-active-circle');
+  						status.addClass('active-circle');
+  					break;
+  					case 'deactivate':
+  						status.removeClass('active-circle');
+  						status.addClass('not-active-circle');
+  					break;
+  				}
 
-		$.ajax(`/users/${action}`, {
-			type: 'POST',
-			data: {
-				users_ids: usersIds,
-			},
-			success: function (data) {
-				data = JSON.parse(data);
+  				$('table input[type=checkbox]').prop('checked', false);
+  			},
+    	});
+    };
+    
+    if (action != 'delete') {
+    	groupRequest();
+	    return;
+	  }
 
-				if (data.status) {
-					let status = users.find('.user-active');
-
-					switch (action) {
-						case 'delete':
-							users.remove();
-							emptyTable();
-						break;
-						case 'activate':
-							status.removeClass('not-active-circle');
-							status.addClass('active-circle');
-						break;
-						case 'deactivate':
-							status.removeClass('active-circle');
-							status.addClass('not-active-circle');
-						break;
-					}
-				} else {
-					let modal = $('#warn-modal');
-					modal.find('.modal-body').text(data.error.message);
-					modal.modal('show');
-				}
-			},
-		});
+    confirmCallback = groupRequest;
+  	
+  	confirmBody.text('Are you sure to delete selected users ?');
+    confirm.modal('show');
 	});
 
-	// add user
-	$('.bttn-add').bind('click', function (e) {
-		let modal = $('#user-form-modal');
-		
-		modal.find('.modal-title').text('Add a new user');
-		modal.find('.errors').text('');
-		modal.modal('show');
+	// add user form
+	$('.bttn-add').bind('click', function (e) {		
+		userTitle.text('Add a new user');
+		userErrors.text('');
 
-		let form = $('#user-form');
-		
-		form.attr('action', '/users/create');
-		form.find('input[type=text]').val('');
-		form.find('select').val('user');
-		form.find('input[type=checkbox]').prop('checked', false);
+		userForm.attr('action', '/users/create');
+		userForm.attr('data-action', 'create');
+		userForm.find('input[type=text]').val('');
+		userForm.find('select').val('user');
+		userForm.find('input[type=checkbox]').prop('checked', false);
+
+		userModal.modal('show');
 	});
 
-	// update user
+	// update user form
 	$(document).on('click', '.bttn-update', function (e) {
 		let userId = $(this).closest('tr').attr('data-id');
-		let user;
 		
+		let user;
 		$.ajax(`/users/${userId}`, {
 			type: 'GET',
 			async: false,
@@ -140,9 +156,8 @@ $(document).ready(function () {
 				data = JSON.parse(data);
 
 				if (! data.status) {
-					let modal = $('#warn-modal');
-					modal.find('.modal-body').text(data.error.message);
-					modal.modal('show');
+					warnBody.text(data.error.message);
+					warn.modal('show');
 					return;
 				}
 
@@ -150,79 +165,72 @@ $(document).ready(function () {
 			},
 		});
 
-		if (! user) {
+		if (user == null) {
 			return;
 		}
-
-		let form = $('#user-form');
 		
-		form.attr('action', `/users/update/${userId}`);
-		form.find('input#first-name').val(user.first_name);
-		form.find('input#last-name').val(user.last_name);
-		form.find('select').val(user.role);
-		form.find('input#status').prop('checked', user.status == '1' ? true : false);
-
-		let modal = $('#user-form-modal');
+		userForm.attr('action', `/users/update/${user.id}`);
+		userForm.attr('data-action', 'update');
+		userForm.find('#first-name').val(user.first_name);
+		userForm.find('#last-name').val(user.last_name);
+		userForm.find('#role').val(user.role);
+		userForm.find('#status').prop('checked', user.status != '0' ? true : false);
 		
-		modal.find('.modal-title').text('Update user');
-		modal.find('.errors').text('');
-		modal.modal('show');
+		userTitle.text('Update user');
+		userErrors.text('');
+		userModal.modal('show');
 	});
 
 	// send user form
 	$('.bttn-send').bind('click', function (e) {
-		let modal = $('#user-form-modal');
-		let form  = $('#user-form');
-		let url   = $(form).attr('action');
-
-		let user = {
-		    first_name: form.find('input#first-name').val(),
-    		last_name: form.find('input#last-name').val(),
-    		role: form.find('select#role').val(),
-    		status: form.find('input#status').prop('checked') ? 1 : 0,
+		let url    = userForm.attr('action');
+		let action = userForm.attr('data-action');
+		let user   = {
+		    first_name: userForm.find('#first-name').val(),
+    		last_name: userForm.find('#last-name').val(),
+    		role: userForm.find('#role').val(),
+    		status: userForm.find('#status').prop('checked') ? 1 : 0,
 		};
 
 		$.ajax(url, {
 			type: 'POST',
-	        data: { user, },
+	    data: { user: user, },
 			success: function (data) {
 				data = JSON.parse(data);
 
-				if (data.status) {
-					if (url.match(/create/)) {
-
-						user.id = data.id;
-
-						if ((noUsers = $('.no-users')).length) {
-							noUsers.replaceWith(userHtml(user))
-						} else {
-							$('tbody').prepend(userHtml(user));
-						}
-					} 
-
-					if (id = url.match(/update\/([0-9]+)/)) {
-						user.id = id[1];
-						$(`tbody tr[data-id=${user.id}]`).replaceWith(userHtml(user));
-					}
-
-					modal.modal('hide');
-				} else {
+				if (! data.status) {
 					let errors = '';
 
 					errors += '<p class="error">' + data.error.message + '</p>';
 
-					if (data = data.error.data) {
-						for (error in data) {
-							errors += '<p class="error">' +  data[error] + '</p>';
-						}
+					if (data.error.data) {
+							Object.values(data.error.data).forEach(function (error) {
+								errors += '<p class="error">' + error + '</p>';
+							});
 					}
 
-					modal.find('.errors').html(errors);
+					userErrors.html(errors);
+					return;
 				}
+
+				if (action == 'create') {
+					user.id = data.id;
+					
+					$('tbody').append(userHtml(user));
+					noUsers();
+				} 
+
+				if (action == 'update') {
+					user.id = url.match(/update\/([0-9]+)/)[1];
+					
+					$(`tbody tr[data-id=${user.id}]`).replaceWith(userHtml(user));
+				}
+
+				userModal.modal('hide');
 			},
 		});
-
 	});
+
 
 	// functions
 
@@ -238,7 +246,7 @@ $(document).ready(function () {
               </div>
             </td>
             
-            <td class="text-nowrap align-middle">
+            <td class="text-nowrap align-middle user-name">
               ${user.first_name + ' ' + user.last_name }
             </td>
             
@@ -247,7 +255,7 @@ $(document).ready(function () {
             </td>
             
             <td class="text-center align-middle">
-              <i class="user-active fa fa-circle ${!user.status ? 'not-' : ''}active-circle"></i>
+              <i class="user-status fa fa-circle ${!user.status ? 'not-' : ''}active-circle"></i>
             </td>
             
             <td class="text-center align-middle">
@@ -262,12 +270,14 @@ $(document).ready(function () {
           </tr>`;
 	}
 
-	// empty table
-	function emptyTable() {
-		let users = $('tbody tr');
+	// no users tabel row
+	function noUsers() {
+		let users = $('tbody tr').not('.no-users');
 
 		if (users.length == 0) {
 			$('tbody').prepend('<tr class="no-users"><td colspan="5" class="h4">No Users</td></tr>');
+		} else {
+			$('.no-users').remove();
 		}
 	}
 

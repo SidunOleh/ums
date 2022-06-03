@@ -10,7 +10,6 @@
       </div>
      
       <div class="modal-body h5">
-        Are you sure?
       </div>
       
       <div class="modal-footer">

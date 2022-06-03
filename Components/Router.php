@@ -9,7 +9,7 @@ class Router
      */
 	private $routes;
 
-	function __construct()
+	public function __construct()
 	{
 		$this->routes = require_once  'Config/routes.php';
 	}

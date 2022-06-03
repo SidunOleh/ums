@@ -72,7 +72,7 @@ require_once 'Parts/Modals/confirm.php';
                                   </div>
                                 </td>
                                 
-                                <td class="text-nowrap align-middle">
+                                <td class="text-nowrap align-middle user-name">
                                   <?php echo $user['first_name'] . ' ' . $user['last_name'] ?>
                                 </td>
                                 
@@ -81,7 +81,7 @@ require_once 'Parts/Modals/confirm.php';
                                 </td>
                                 
                                 <td class="text-center align-middle">
-                                  <i class="user-active fa fa-circle <?php echo !$user['status'] ? 'not-' : '' ?>active-circle"></i>
+                                  <i class="user-status fa fa-circle <?php echo !$user['status'] ? 'not-' : '' ?>active-circle"></i>
                                 </td>
                                 
                                 <td class="text-center align-middle">

@@ -9,14 +9,14 @@ class User
 	/**
 	 * Gets all users
 	 * 
-     * @return array|bool users
+     * @return array users
      */
 	public static function getAll()
 	{
 		$result = DB::query("SELECT * FROM `users` ORDER BY `id` ASC");
 
 		if (! $result) {
-			return false;
+			return [];
 		}
 
 		$users = $result->fetch_all(MYSQLI_ASSOC);
@@ -29,18 +29,18 @@ class User
      * 
      * @param $id user's id
      * 
-     * @return array|bool users
+     * @return array|null user
      */
 	public static function get($id)
 	{
 		$result = DB::query("SELECT * FROM `users` WHERE `id`='$id'");
 
 		if (! $result) {
-			return false;
+			return null;
 		}
 
 		if (! $user = $result->fetch_assoc()) {
-			return [];
+			return null;
 		}
 
 		return $user;
@@ -51,7 +51,7 @@ class User
 	 * 
 	 * @param array $user user's data
 	 * 
-     * @return int|bool id of created user
+     * @return int|null id of created user
      */
 	public static function create($user)
 	{
@@ -62,10 +62,10 @@ class User
 				('$user[first_name]', '$user[last_name]', '$user[role]', '$user[status]')");
 		
 		if (! $result) {
-			return false;
+			return null;
 		}
 
-		return DB::get()->insert_id;
+		return DB::insertId();
 	}
 
 	/**
@@ -74,14 +74,14 @@ class User
 	 * @param array $user user's data
 	 * @param int $id user's id
 	 * 
-     * @return bool|int
+     * @return bool|null
      */
 	public static function update($user, $id)
 	{
 		$exist = DB::query("SELECT `id` FROM `users` WHERE `id`='$id'");
 
 		if (! $exist->fetch_assoc()) {
-			return 0;
+			return null;
 		}
 
 		$result = DB::query("UPDATE `users` 
@@ -92,75 +92,49 @@ class User
 				`id`='$id'");
 
 		if (! $result) {
-			return false;
+			return null;
 		}
 
 		return true;
 	}
 
 	/**
-	 * Deletes user
-	 * 
-	 * @param int $id user's id
-	 * 
-     * @return bool
-     */
-	public static function delete($id)
-	{
-		$result = DB::query("DELETE FROM `users` WHERE `id`='$id'");
-
-		if (! $result) {
-			return false;
-		}
-		
-		return DB::get()->affected_rows;
-	}
-
-	/**
-	 * Deletes group of users
+	 * Deletes users
 	 * 
 	 * @param int $ids user's ids
 	 * 
-     * @return bool
+     * @return bool|null
      */
-	public static function deleteGroup($ids)
+	public static function delete($ids)
 	{
 		$ids = implode(',', $ids);
 
-		$result = DB::query("DELETE FROM `users` WHERE `id` IN ($ids)");
+		DB::query("DELETE FROM `users` WHERE `id` IN ($ids)");
 
-		return $result;
+		if (DB::affected() === 0) {
+			return null;
+		}
+
+		return true;
 	}
 
 	/**
-	 * Changes status to active group of users
+	 * Changes user's status
 	 * 
-	 * @param int $userIds
+	 * @param int $ids user's ids
 	 * 
-     * @return bool
+     * @return bool|null
      */
-	public static function activateGroup($usersIds)
+	public static function changeStatus($ids, $status)
 	{
-		$usersIds = implode(',', $usersIds);
+		$ids = implode(',', $ids);
 
-		$result = DB::query("UPDATE `users` SET `status`=1 WHERE `id` IN ($usersIds)");
+		$result = DB::query("UPDATE `users` SET `status`=$status WHERE `id` IN ($ids)");
 
-		return $result;
-	}
+		if (! $result) {
+			return null;
+		}
 
-	/**
-	 * Changes status to inactive group of users
-	 * 
-	 * @param int $userIds
-	 * 
-     * @return bool
-     */
-	public static function deactivateGroup($usersIds)
-	{
-		$usersIds = implode(',', $usersIds);
-
-		$result = DB::query("UPDATE `users` SET `status`=0 WHERE `id` IN ($usersIds)");
-
-		return $result;
+		return true;
 	}
 }

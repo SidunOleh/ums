@@ -13,18 +13,19 @@
       <div class="modal-body">
 
         <div class="errors">
+          <p class="error"></p>
         </div>
        
         <form method="POST" id="user-form">
           
           <div class="form-group">
             <label for="first-name" class="col-form-label">First Name:</label>
-            <input type="text" class="form-control" id="first-name" name="first_name">
+            <input type="text" class="form-control user-input" id="first-name" name="first_name">
           </div>
           
           <div class="form-group">
             <label for="last-name" class="col-form-label">Last Name:</label>
-            <input type="text" class="form-control" id="last-name" name="last_name">
+            <input type="text" class="form-control user-input" id="last-name" name="last_name">
           </div>
 
           <div class="form-group">
@@ -42,6 +43,8 @@
             <input type="checkbox" id="status" class="cbx hidden" name="status"/>
             <label for="status" class="lbl"></label>
           </div>  
+
+          <input type="hidden" name='user_id' id="user-id">
 
         </form>
       

@@ -5,10 +5,10 @@ body {
 .card-body {
   min-height: calc(100vh - 60px);
 }
-.active-circle {
-  color: green;
+.active {
+  color: green !important;
 }
-.not-active-circle {
+.user-status {
   color: #c3c7b7;
 }
 .lbl {

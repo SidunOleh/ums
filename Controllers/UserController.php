@@ -17,10 +17,6 @@ class UserController
 	{
 		$users = User::getAll();
 
-		if ($users === false) {
-			return Request::makeError(500, 'Internal Server Error');
-		}
-
 		require_once 'Views/index.php';
 	}
 
@@ -33,12 +29,8 @@ class UserController
 	{
 		$user = User::get($id);
 
-		if ($user === false) {
-			return Request::makeError(500, 'Internal Server Error');
-		}
-
-		if (count($user) == 0) {
-			return Request::makeError(100, 'Not found user');
+		if ($user === null) {
+			return Request::makeError(100, 'Not Found User');
 		}
 
 		return Request::make(['user'=>$user]);
@@ -56,13 +48,13 @@ class UserController
 		$validator = Validator::get('user');
 
 		if ($errors = $validator->validate($user)) {
-			return Request::makeError(400, 'Invalid inputs', $errors);
+			return Request::makeError(400, 'Invalid Inputs', $errors);
 		}
 
 		$validated = $validator->validated();
 
 		if (! $id = User::create($validated)) {
-			return Request::makeError(500, 'Internal Server Error');
+			return Request::makeError(100, 'Not Found User');
 		}
 
 		return Request::make(['id'=>$id]);
@@ -77,107 +69,60 @@ class UserController
      */
 	public function update($id)
 	{
-		$user = $_POST['user'] ?? ['first_name'=>'Oleg','last_name'=>'Smith','role'=>'user','status'=>1];
+		$user = $_POST['user'] ?? [];
 
 		$validator = Validator::get('user');
 
 		if ($errors = $validator->validate($user)) {
-			return Request::makeError(400, 'Invalid inputs', $errors);
+			return Request::makeError(400, 'Invalid Inputs', $errors);
 		}
 
 		$validated = $validator->validated();
 
-
 		$updated = User::update($validated, $id);
-		
-		if ($updated === false) {
-			return Request::makeError(500, 'Internal Server Error');
-		}
 
-		if ($updated === 0) {
-			return Request::makeError(100, 'Not found user');
+		if ($updated === null) {
+			return Request::makeError(100, 'Not Found User');
 		}
 
 		return Request::make();
 	}
 
 	/**
-     * Deletes user
-     * 
-     * @param int $id user's id
+     * Deletes users
      * 
      * @return string response
      */
-	public function delete($id)
-	{
-		$deleted = User::delete($id);
-		
-		if ($deleted === false) {
-			return Request::makeError(500, 'Internal Server Error');
-		}
-
-		if ($deleted === 0) {
-			return Request::makeError(100, 'Not found user');
-		}
-
-		return Request::make();
-	}
-
-	/**
-     * Deletes group of users
-     * 
-     * @return string response
-     */
-	public function deleteGroup()
+	public function delete()
 	{
 		$ids = $_POST['users_ids'] ?? [];
 
-		if (count($ids) == 0) {
-			return Request::makeError(400, 'Invalid inputs');
+		if (count($ids) === 0) {
+			return Request::makeError(400, 'Invalid Inputs');
 		}
 
-		if (! User::deleteGroup($ids)) {
-			return Request::makeError(500, 'Internal Server Error');
+		if (User::delete($ids) === null) {
+			return Request::makeError(100, 'Not Found User');
 		}
 
 		return Request::make();
 	}
 
 	/**
-     * Changes status to active to group of users
+     * Changes user's status
      * 
      * @return string response
      */
-	public function activateGroup()
+	public function changeStatus($status)
 	{
 		$ids = $_POST['users_ids'] ?? [];
 
-		if (count($ids) == 0) {
+		if (count($ids) === 0) {
 			return Request::makeError(400, 'Invalid inputs');
 		}
 
-		if (! User::activateGroup($ids)) {
-			return Request::makeError(500, 'Internal Server Error');
-		}
-
-		return Request::make();
-	}
-	
-	/**
-     * Changes status to inactive to group of users
-     * 
-     * @return string response
-     */
-	public function deactivateGroup()
-	{
-		$ids = $_POST['users_ids'] ?? [];
-
-		if (count($ids) == 0) {
-			return Request::makeError(400, 'Invalid inputs');
-		}
-
-		if (! User::deactivateGroup($ids)) {
-			return Request::makeError(500, 'Internal Server Error');
+		if (User::changeStatus($ids, $status) === null) {
+			return Request::makeError(100, 'Not Found User');
 		}
 
 		return Request::make();

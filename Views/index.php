@@ -14,24 +14,7 @@ require_once 'Parts/Modals/confirm.php';
             <div class="e-panel card">
               <div class="card-body d-flex flex-column">
                 
-                <div class="cart-box row px-3">
-                  
-                  <button type="button" class="btn btn-primary col-2 bttn-add">Add</button>
-
-                  <div class="cart-select col-8">
-                    
-                    <select class="form-control">
-                      <option disabled selected>Please Select</option>
-                      <option value="activate">Set active</option>
-                      <option value="deactivate">Set not active</option>
-                      <option value="delete">Delete</option>
-                    </select>
-                  
-                  </div>
-
-                  <button type="button" class="btn btn-primary col-2 bttn-select">Ok</button>
-                
-                </div>
+                <?php require 'Parts/select-box.php'; ?>
                   
                   <div class="e-table flex-grow-1">
                     <div class="table-responsive table-lg mt-3">
@@ -44,7 +27,7 @@ require_once 'Parts/Modals/confirm.php';
                             <th class="align-top">
                               <div
                                 class="custom-control custom-control-inline custom-checkbox custom-control-nameless m-0">
-                                <input type="checkbox" class="custom-control-input" id="all-items">
+                                <input type="checkbox" class="custom-control-input user-checkbox" id="all-items">
                                 <label class="custom-control-label" for="all-items"></label>
                               </div>
                             </th>
@@ -67,7 +50,7 @@ require_once 'Parts/Modals/confirm.php';
                                 <td class="align-middle">
                                   <div
                                     class="custom-control custom-control-inline custom-checkbox custom-control-nameless m-0 align-top">
-                                    <input type="checkbox" class="custom-control-input" id="item-<?php echo $user['id'] ?>">
+                                    <input type="checkbox" class="custom-control-input user-checkbox" id="item-<?php echo $user['id'] ?>">
                                     <label class="custom-control-label" for="item-<?php echo $user['id'] ?>"></label>
                                   </div>
                                 </td>
@@ -81,7 +64,7 @@ require_once 'Parts/Modals/confirm.php';
                                 </td>
                                 
                                 <td class="text-center align-middle">
-                                  <i class="user-status fa fa-circle <?php echo !$user['status'] ? 'not-' : '' ?>active-circle"></i>
+                                  <i class="user-status fa fa-circle <?php echo $user['status'] ? 'active' : '' ?>"></i>
                                 </td>
                                 
                                 <td class="text-center align-middle">
@@ -110,24 +93,7 @@ require_once 'Parts/Modals/confirm.php';
                     </div>
                   </div>
 
-                <div class="cart-box row px-3">
-                  
-                  <button type="button" class="btn btn-primary col-2 bttn-add" >Add</button>
-
-                  <div class="cart-select col-8">
-                    
-                    <select class="form-control">
-                      <option disabled selected>Please Select</option>
-                      <option value="activate">Set active</option>
-                      <option value="deactivate">Set not active</option>
-                      <option value="delete">Delete</option>
-                    </select>
-                  
-                  </div>
-
-                  <button type="button" class="btn btn-primary col-2 bttn-select">Ok</button>
-                
-                </div>
+                <?php require 'Parts/select-box.php'; ?>
 
               </div>
             </div>

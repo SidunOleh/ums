@@ -4,13 +4,13 @@ $(document).ready(function () {
 	let confirm     = $('#confirm-modal');
 	let confirmBody = confirm.find('.modal-body');
 	
-	let warn        = $('#warn-modal');
-	let warnBody    = warn.find('.modal-body');
+	let warn     = $('#warn-modal');
+	let warnBody = warn.find('.modal-body');
 	
-	let userModal   = $('#user-form-modal');
-	let userTitle   = userModal.find('.modal-title');
-	let userErrors  = userModal.find('.errors');
-	let userForm    = userModal.find('#user-form');
+	let userModal  = $('#user-form-modal');
+	let userTitle  = userModal.find('.modal-title');
+	let userErrors = userModal.find('.errors');
+	let userForm   = userModal.find('#user-form');
 
 	// confirmation
 	let confirmCallback;
@@ -28,15 +28,13 @@ $(document).ready(function () {
 	// delete user
 	$(document).on('click', '.bttn-delete', function (e) {
 		let user     = $(this).closest('tr');
-		let userName = user.find('.user-name').text();
 		let userId   = user.attr('data-id');
-
-    confirmBody.text(`Are you sure to delete ${userName}?`);
-		confirm.modal('show');
+		let userName = user.find('.user-name').text();
 
 		confirmCallback = function () {
-			$.ajax(`/users/delete/${userId}`, {
+			$.ajax('/users/delete', {
 				type: 'POST',
+				data: { users_ids: userId },
 				success: function (data) {
 					data = JSON.parse(data);
 
@@ -51,22 +49,25 @@ $(document).ready(function () {
 				},
 			});
 		};
+
+		confirmBody.text(`Are you sure to delete ${userName} ?`);
+		confirm.modal('show');
 	});
 
 	// checkboxes
-	$(document).on('change', 'table input[type=checkbox]', function (e) {
+	$(document).on('change', '.user-checkbox', function (e) {
 		let current = $(this);
 
 		if (current.attr('id') == 'all-items') {
-			$('table input[type=checkbox]').prop('checked', current.prop('checked'));
+			$('.user-checkbox').prop('checked', current.prop('checked'));
 		} else {
-			$('table input[type=checkbox]#all-items').prop('checked', false);
+			$('.user-checkbox#all-items').prop('checked', false);
 		}
 	});
 
 	// group requests
 	$('.bttn-select').bind('click', function (e) {
-		let users    = $('tbody input[type=checkbox]:checked').closest('tr');
+		let users    = $('tbody .user-checkbox:checked').closest('tr');
 		let usersIds = jQuery.map(users, (user) => $(user).attr('data-id'));
 
 		if (usersIds.length == 0) {
@@ -104,17 +105,15 @@ $(document).ready(function () {
   						users.remove();
   						noUsers();
   					break;
-  					case 'activate':
-  						status.removeClass('not-active-circle');
-  						status.addClass('active-circle');
+  					case 'status/1':
+  						status.addClass('active');
   					break;
-  					case 'deactivate':
-  						status.removeClass('active-circle');
-  						status.addClass('not-active-circle');
+  					case 'status/0':
+  						status.removeClass('active');
   					break;
   				}
 
-  				$('table input[type=checkbox]').prop('checked', false);
+  				$('.user-checkbox').prop('checked', false);
   			},
     	});
     };
@@ -136,10 +135,10 @@ $(document).ready(function () {
 		userErrors.text('');
 
 		userForm.attr('action', '/users/create');
-		userForm.attr('data-action', 'create');
-		userForm.find('input[type=text]').val('');
-		userForm.find('select').val('user');
-		userForm.find('input[type=checkbox]').prop('checked', false);
+		userForm.find('#user-id').val('');
+		userForm.find('.user-input').val('');
+		userForm.find('#role').val('user');
+		userForm.find('#status').prop('checked', false);
 
 		userModal.modal('show');
 	});
@@ -165,12 +164,12 @@ $(document).ready(function () {
 			},
 		});
 
-		if (user == null) {
+		if (user === undefined) {
 			return;
 		}
 		
 		userForm.attr('action', `/users/update/${user.id}`);
-		userForm.attr('data-action', 'update');
+		userForm.find('#user-id').val(user.id);
 		userForm.find('#first-name').val(user.first_name);
 		userForm.find('#last-name').val(user.last_name);
 		userForm.find('#role').val(user.role);
@@ -201,11 +200,11 @@ $(document).ready(function () {
 				if (! data.status) {
 					let errors = '';
 
-					errors += '<p class="error">' + data.error.message + '</p>';
+					errors += errorHtml(data.error.message);
 
 					if (data.error.data) {
 							Object.values(data.error.data).forEach(function (error) {
-								errors += '<p class="error">' + error + '</p>';
+								errors += errorHtml(error);
 							});
 					}
 
@@ -213,14 +212,16 @@ $(document).ready(function () {
 					return;
 				}
 
-				if (action == 'create') {
+				let id = userForm.find('#user-id').val();
+
+				if (id == '') {
 					user.id = data.id;
 					
 					$('tbody').append(userHtml(user));
 					noUsers();
 				} 
 
-				if (action == 'update') {
+				if (id != '') {
 					user.id = url.match(/update\/([0-9]+)/)[1];
 					
 					$(`tbody tr[data-id=${user.id}]`).replaceWith(userHtml(user));
@@ -241,13 +242,13 @@ $(document).ready(function () {
             <td class="align-middle">
               <div
                 class="custom-control custom-control-inline custom-checkbox custom-control-nameless m-0 align-top">
-                <input type="checkbox" class="custom-control-input" id="item-${user.id}">
+                <input type="checkbox" class="custom-control-input user-checkbox" id="item-${user.id}">
                 <label class="custom-control-label" for="item-${user.id}"></label>
               </div>
             </td>
             
             <td class="text-nowrap align-middle user-name">
-              ${user.first_name + ' ' + user.last_name }
+              ${user.first_name + ' ' + user.last_name}
             </td>
             
             <td class="text-nowrap align-middle">
@@ -255,7 +256,7 @@ $(document).ready(function () {
             </td>
             
             <td class="text-center align-middle">
-              <i class="user-status fa fa-circle ${!user.status ? 'not-' : ''}active-circle"></i>
+              <i class="user-status fa fa-circle ${user.status ? 'active' : ''}"></i>
             </td>
             
             <td class="text-center align-middle">
@@ -270,7 +271,12 @@ $(document).ready(function () {
           </tr>`;
 	}
 
-	// no users tabel row
+	// returns error in html
+	function errorHtml(error) {
+		return `<p class="error">${error}</p>`;
+	}
+
+	// no user table rows
 	function noUsers() {
 		let users = $('tbody tr').not('.no-users');
 

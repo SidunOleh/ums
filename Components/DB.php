@@ -56,4 +56,24 @@ class DB {
 
 		return self::$db;
 	}
+
+	/**
+	 * Returns of the last inserted row id
+	 * 
+     * @return int|null
+     */
+	public static function insertId()
+	{
+		return self::$db ? self::$db->insert_id : null;
+	}
+
+	/**
+	 * Returns number of affected rows in a previous query
+	 * 
+     * @return int|null
+     */
+	public static function affected()
+	{
+		return self::$db ? self::$db->affected_rows : null;
+	}
 }

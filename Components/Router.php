@@ -11,7 +11,7 @@ class Router
 
 	public function __construct()
 	{
-		$this->routes = require_once  'Config/routes.php';
+		$this->routes = require_once 'Config/routes.php';
 	}
 
 	/**

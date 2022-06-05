@@ -34,7 +34,7 @@ $(document).ready(function () {
 		confirmCallback = function () {
 			$.ajax('/users/delete', {
 				type: 'POST',
-				data: { users_ids: userId },
+				data: { users_ids: { userId } },
 				success: function (data) {
 					data = JSON.parse(data);
 

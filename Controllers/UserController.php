@@ -118,7 +118,7 @@ class UserController
 		$ids = $_POST['users_ids'] ?? [];
 
 		if (count($ids) === 0) {
-			return Request::makeError(400, 'Invalid inputs');
+			return Request::makeError(400, 'Invalid Inputs');
 		}
 
 		if (User::changeStatus($ids, $status) === null) {

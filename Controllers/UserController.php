@@ -29,6 +29,7 @@ class UserController
 	{
 		$user = User::get($id);
 
+
 		if ($user === null) {
 			return Request::makeError(100, 'Not Found User');
 		}
@@ -43,8 +44,8 @@ class UserController
      */
 	public function create()
 	{
-		$user = $_POST['user'] ?? [];
-		
+		$user = (array) ($_POST['user'] ?? []);
+
 		$validator = Validator::get('user');
 
 		if ($errors = $validator->validate($user)) {
@@ -69,7 +70,7 @@ class UserController
      */
 	public function update($id)
 	{
-		$user = $_POST['user'] ?? [];
+		$user = (array) ($_POST['user'] ?? []);
 
 		$validator = Validator::get('user');
 
@@ -95,7 +96,7 @@ class UserController
      */
 	public function delete()
 	{
-		$ids = $_POST['users_ids'] ?? [];
+		$ids = (array) ($_POST['users_ids'] ?? []);
 
 		if (count($ids) === 0) {
 			return Request::makeError(400, 'Invalid Inputs');
@@ -115,7 +116,7 @@ class UserController
      */
 	public function changeStatus($status)
 	{
-		$ids = $_POST['users_ids'] ?? [];
+		$ids = (array) ($_POST['users_ids'] ?? []);
 
 		if (count($ids) === 0) {
 			return Request::makeError(400, 'Invalid inputs');
